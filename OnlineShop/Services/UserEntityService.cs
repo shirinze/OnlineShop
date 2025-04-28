@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Caching.Memory;
 using OnlineShop.Exceptions;
 using OnlineShop.Models;
+using OnlineShop.ViewModels;
 
 namespace OnlineShop.Services;
 
@@ -37,10 +38,20 @@ public class UserEntityService(OnlineShopDBContext db,IMemoryCache memoryCache) 
         return value;
     }
 
-    public async Task<List<UserEntity>> GetListAsync(CancellationToken cancellationToken)
+    public async Task<List<UserViewModel>> GetFullNameListAsync(CancellationToken cancellationToken)
     {
-        var values = await db.Set<UserEntity>().ToListAsync(cancellationToken);
-        return values;
+        var users = await db.UserEntities.Select(x => new
+        {
+            x.FirstName,
+            x.LastName
+            
+
+        }).ToListAsync(cancellationToken);
+        var result = users.Select(x => new UserViewModel
+        {
+            FullName = x.FirstName + " " + x.LastName
+        }).Where(u => u.FullName.Contains('q')).ToList();
+        return result;
     }
 
     public async Task ToggleActivationAsync(int id, CancellationToken cancellationToken)
