@@ -36,10 +36,10 @@ public class UserEntityController(IUserEntityService service) : ControllerBase
         var value = await service.GetByIdAsync(id, cancellationToken);
         return Ok(value);
     }
-    [HttpGet("GetUserFullName")]
-    public async Task<IActionResult> GetUserFullName(CancellationToken cancellationToken)
+    [HttpGet]
+    public async Task<IActionResult> GetList([FromQuery] string? q,CancellationToken cancellationToken)
     {
-        var values = await service.GetFullNameListAsync(cancellationToken);
+        var values = await service.GetListAsync(q,cancellationToken);
         return Ok(values);
     }
     [HttpPut("{id:int}/Active")]

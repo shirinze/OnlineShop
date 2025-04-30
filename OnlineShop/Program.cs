@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
-using OnlineShop;
+using OnlineShop.Data;
+using OnlineShop.Middlewares;
+using OnlineShop.Repositories;
 using OnlineShop.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -12,7 +14,12 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+
+builder.Services.AddScoped<IUserEntityRepository,UserEntityRepository>();
 builder.Services.AddScoped<IUserEntityService, UserEntityService>();
+
 builder.Services.AddMemoryCache();
 var app = builder.Build();
 
@@ -26,5 +33,6 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.MapControllers();
-
+app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
+app.UseMiddleware<RateLimitMiddleware>();
 app.Run();

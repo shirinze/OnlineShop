@@ -1,25 +1,26 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Caching.Memory;
+﻿using Microsoft.Extensions.Caching.Memory;
+using OnlineShop.Data;
 using OnlineShop.Exceptions;
 using OnlineShop.Models;
-using OnlineShop.ViewModels;
+
 
 namespace OnlineShop.Services;
 
-public class UserEntityService(OnlineShopDBContext db,IMemoryCache memoryCache) : IUserEntityService
+public class UserEntityService(IUnitOfWork unitOfWork,IMemoryCache memoryCache) : IUserEntityService
 {
     public async Task CreateAsync(string firstName, string lastName, string phone, CancellationToken cancellationToken)
     {
         var value = UserEntity.Create(firstName,lastName,phone);
-        await db.AddAsync(value, cancellationToken);
-        await db.SaveChangesAsync(cancellationToken);
+        await unitOfWork.UserEntityRepository.AddAsync(value, cancellationToken);
+        await unitOfWork.CommitAsync(cancellationToken);
     }
 
     public async Task DeleteAsync(int id, CancellationToken cancellationToken)
     {
-        var value = await db.Set<UserEntity>().FirstOrDefaultAsync(x => x.UserEntityId == id, cancellationToken) ?? throw new NotFoundException($"entity with id {id} not found.");
-        db.Remove(value);
-        await db.SaveChangesAsync(cancellationToken);
+        var value = await unitOfWork.UserEntityRepository.GetByIdAsync(id,cancellationToken)
+            ?? throw new NotFoundException($"entity with id {id} not found.");
+        unitOfWork.UserEntityRepository.Delete(value);
+        await unitOfWork.CommitAsync(cancellationToken);
         memoryCache.Remove(id);
     }
 
@@ -29,7 +30,7 @@ public class UserEntityService(OnlineShopDBContext db,IMemoryCache memoryCache) 
 
         if (value is null)
         {
-            value = await db.Set<UserEntity>().FirstOrDefaultAsync(a => a.UserEntityId == id, cancellationToken)
+            value = await unitOfWork.UserEntityRepository.GetByIdAsync(id, cancellationToken)
                 ?? throw new NotFoundException($"entity with id {id} not found.");
 
             memoryCache.Set(id, value, DateTime.Now.AddSeconds(30));
@@ -38,37 +39,46 @@ public class UserEntityService(OnlineShopDBContext db,IMemoryCache memoryCache) 
         return value;
     }
 
-    public async Task<List<UserViewModel>> GetFullNameListAsync(CancellationToken cancellationToken)
+    public async Task<List<UserEntity>> GetListAsync(string? q, CancellationToken cancellationToken)
     {
-        var users = await db.UserEntities.Select(x => new
-        {
-            x.FirstName,
-            x.LastName
-            
+        string cacheKey;
 
-        }).ToListAsync(cancellationToken);
-        var result = users.Select(x => new UserViewModel
+        if (string.IsNullOrWhiteSpace(q))
         {
-            FullName = x.FirstName + " " + x.LastName
-        }).Where(u => u.FullName.Contains('q')).ToList();
-        return result;
+            cacheKey = "user_list_no_query";
+        }
+        else
+        {
+            cacheKey = $"user_list_{q}";
+        }
+
+        var values = memoryCache.Get<List<UserEntity>>(cacheKey);
+
+        if (values == null)
+        {
+            values = await unitOfWork.UserEntityRepository.GetAllAsync(q, cancellationToken);
+            memoryCache.Set(cacheKey, values, DateTime.Now.AddSeconds(30));
+        }
+
+        return values;
     }
 
     public async Task ToggleActivationAsync(int id, CancellationToken cancellationToken)
     {
-        var value = await db.Set<UserEntity>().FirstOrDefaultAsync(a => a.UserEntityId == id, cancellationToken)
+        var value = await unitOfWork.UserEntityRepository.GetByIdAsync(id,cancellationToken)
             ?? throw new NotFoundException($"entity with id {id} not found.");
 
         value.Update(value.FirstName,value.LastName,value.Phone,!value.IsActive);
-        await db.SaveChangesAsync(cancellationToken);
+        await unitOfWork.CommitAsync(cancellationToken);
     }
 
     public async Task UpdateAsync(int id, string firstName, string lastName, string phone, CancellationToken cancellationToken)
     {
-        var value = await db.Set<UserEntity>().FirstOrDefaultAsync(x => x.UserEntityId == id, cancellationToken) ?? throw new NotFoundException($"entity with id {id} not found ");
+        var value = await unitOfWork.UserEntityRepository.GetByIdAsync(id, cancellationToken)
+            ?? throw new NotFoundException($"entity with id {id} not found.");
         
         value.Update(firstName, lastName, phone,value.IsActive);
-        await db.SaveChangesAsync(cancellationToken);
+        await unitOfWork.CommitAsync(cancellationToken);
         memoryCache.Remove(id);
     }
 }
