@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using OnlineShop.Data;
+using OnlineShop.Features;
 using OnlineShop.Middlewares;
 using OnlineShop.Repositories;
 using OnlineShop.Services;
@@ -18,6 +19,8 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
 builder.Services.AddScoped<IUserEntityRepository,UserEntityRepository>();
+builder.Services.AddScoped<ICityRepository,CityRepository>();
+
 builder.Services.AddScoped<IUserEntityService, UserEntityService>();
 
 builder.Services.AddMemoryCache();
@@ -35,4 +38,10 @@ app.UseHttpsRedirection();
 app.MapControllers();
 app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
 app.UseMiddleware<RateLimitMiddleware>();
+app.MapGet("/Citys", async (IUnitOfWork unitOfWork, CancellationToken cancellationToken) =>
+{
+    var entitites = await unitOfWork.CityRepository.GetListCityAsync(cancellationToken);
+    return BaseResult.Success(entitites);
+})
+    .WithTags("City");
 app.Run();

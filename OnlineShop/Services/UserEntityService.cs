@@ -41,16 +41,7 @@ public class UserEntityService(IUnitOfWork unitOfWork,IMemoryCache memoryCache) 
 
     public async Task<List<UserEntity>> GetListAsync(string? q, CancellationToken cancellationToken)
     {
-        string cacheKey;
-
-        if (string.IsNullOrWhiteSpace(q))
-        {
-            cacheKey = "user_list_no_query";
-        }
-        else
-        {
-            cacheKey = $"user_list_{q}";
-        }
+        var cacheKey = $"user_list_{q}";
 
         var values = memoryCache.Get<List<UserEntity>>(cacheKey);
 
@@ -69,6 +60,7 @@ public class UserEntityService(IUnitOfWork unitOfWork,IMemoryCache memoryCache) 
             ?? throw new NotFoundException($"entity with id {id} not found.");
 
         value.Update(value.FirstName,value.LastName,value.Phone,!value.IsActive);
+        unitOfWork.UserEntityRepository.Update(value);
         await unitOfWork.CommitAsync(cancellationToken);
     }
 
@@ -78,6 +70,7 @@ public class UserEntityService(IUnitOfWork unitOfWork,IMemoryCache memoryCache) 
             ?? throw new NotFoundException($"entity with id {id} not found.");
         
         value.Update(firstName, lastName, phone,value.IsActive);
+        unitOfWork.UserEntityRepository.Update(value);
         await unitOfWork.CommitAsync(cancellationToken);
         memoryCache.Remove(id);
     }

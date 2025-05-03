@@ -7,4 +7,5 @@ public interface IUnitOfWork
     public Task CommitAsync(CancellationToken cancellationToken);
 
     public IUserEntityRepository UserEntityRepository { get; init; }
+    public ICityRepository CityRepository { get; init; }
 }

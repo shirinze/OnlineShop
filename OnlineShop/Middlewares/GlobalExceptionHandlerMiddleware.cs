@@ -1,11 +1,11 @@
 ﻿using OnlineShop.Exceptions;
+using OnlineShop.Features;
 using System.Text.Json;
 
 namespace OnlineShop.Middlewares;
 
 public class GlobalExceptionHandlerMiddleware(RequestDelegate next)
-{
-   
+{  
     public async Task Invoke(HttpContext context)
     {
         try
@@ -20,10 +20,15 @@ public class GlobalExceptionHandlerMiddleware(RequestDelegate next)
         {
             await SetContext(context, ex.Message, StatusCodes.Status404NotFound);
         }
+        catch (TooManyRequestException ex)
+        {
+            await SetContext(context, ex.Message, StatusCodes.Status429TooManyRequests);
+        }
         catch (Exception ex)
         {
             await SetContext(context, ex.Message, StatusCodes.Status500InternalServerError);
         }
+
     }
 
     private static async Task SetContext(HttpContext context, string message, int statusCode)
@@ -31,6 +36,7 @@ public class GlobalExceptionHandlerMiddleware(RequestDelegate next)
         context.Response.StatusCode = statusCode;
         context.Response.ContentType = "application/json";
 
-        await context.Response.WriteAsync(JsonSerializer.Serialize(message));
+        var result = BaseResult.Fail(message);
+        await context.Response.WriteAsync(JsonSerializer.Serialize(result));
     }
 }
