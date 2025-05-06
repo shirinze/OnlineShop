@@ -1,7 +1,9 @@
 ﻿using Microsoft.Extensions.Caching.Memory;
 using OnlineShop.Data;
 using OnlineShop.Exceptions;
+using OnlineShop.Features;
 using OnlineShop.Models;
+using OnlineShop.Specifications;
 
 
 namespace OnlineShop.Services;
@@ -39,15 +41,17 @@ public class UserEntityService(IUnitOfWork unitOfWork,IMemoryCache memoryCache) 
         return value;
     }
 
-    public async Task<List<UserEntity>> GetListAsync(string? q, CancellationToken cancellationToken)
-    {
+    public async Task<List<UserEntity>> GetListAsync(string? q, OrderType? orderType, CancellationToken cancellationToken)
+    { 
         var cacheKey = $"user_list_{q}";
 
         var values = memoryCache.Get<List<UserEntity>>(cacheKey);
-
+        
         if (values == null)
         {
-            values = await unitOfWork.UserEntityRepository.GetAllAsync(q, cancellationToken);
+            var specification = new GetUserEntityByContainsNameSpecification(q, orderType);
+            values = await unitOfWork.UserEntityRepository.GetAllAsync(specification, cancellationToken);
+
             memoryCache.Set(cacheKey, values, DateTime.Now.AddSeconds(30));
         }
 

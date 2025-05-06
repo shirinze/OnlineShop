@@ -1,4 +1,5 @@
-﻿using OnlineShop.Models;
+﻿using OnlineShop.Features;
+using OnlineShop.Models;
 
 namespace OnlineShop.Repositories;
 public interface IUserEntityRepository
@@ -7,6 +8,6 @@ public interface IUserEntityRepository
     public void Update(UserEntity userEntity);
     public void Delete(UserEntity userEntity);
     public Task<UserEntity?> GetByIdAsync(int id,CancellationToken cancellationToken);
-    public Task<List<UserEntity>> GetAllAsync(string? q,CancellationToken cancellationToken);
+    public Task<List<UserEntity>> GetAllAsync(BaseSpecification<UserEntity> specification, CancellationToken cancellationToken);
 }
 

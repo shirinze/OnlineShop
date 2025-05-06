@@ -1,5 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using OnlineShop.Data;
+using OnlineShop.Features;
+using OnlineShop.Helpers;
 using OnlineShop.Models;
 
 namespace OnlineShop.Repositories
@@ -17,13 +19,10 @@ namespace OnlineShop.Repositories
             set.Remove(userEntity);
         }
 
-        public async Task<List<UserEntity>> GetAllAsync(string? q, CancellationToken cancellationToken)
+        public async Task<List<UserEntity>> GetAllAsync(BaseSpecification<UserEntity> specification, CancellationToken cancellationToken)
         {
-            var query = set.AsNoTracking();
-            if (!string.IsNullOrEmpty(q))
-            {
-                query=query.Where(x=>x.FirstName.Contains(q) || x.LastName.Contains(q));
-            }
+            var query = set.AsNoTracking().Specify(specification);
+
             return await query.ToListAsync(cancellationToken);
         }
 

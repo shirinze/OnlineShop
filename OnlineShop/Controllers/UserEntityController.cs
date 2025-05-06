@@ -38,9 +38,9 @@ public class UserEntityController(IUserEntityService service) : ControllerBase
         return Ok(BaseResult.Success(value));
     }
     [HttpGet]
-    public async Task<IActionResult> GetList([FromQuery] string? q,CancellationToken cancellationToken)
+    public async Task<IActionResult> GetList([FromQuery] string? q, [FromQuery] OrderType? orderType,CancellationToken cancellationToken)
     {
-        var values = await service.GetListAsync(q,cancellationToken);
+        var values = await service.GetListAsync(q, orderType, cancellationToken);
         return Ok(BaseResult.Success(values));
     }
     [HttpPut("{id:int}/Active")]

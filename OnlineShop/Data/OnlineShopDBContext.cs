@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using OnlineShop.Helpers;
 using OnlineShop.Models;
+using System.ComponentModel.DataAnnotations;
 namespace OnlineShop.Data;
 
 public class OnlineShopDBContext(DbContextOptions options) : DbContext(options)
@@ -19,6 +20,11 @@ public class OnlineShopDBContext(DbContextOptions options) : DbContext(options)
         modelBuilder.Entity<UserEntity>().Property(x => x.UserEntityId)
             .HasDefaultValueSql("NEXT VALUE FOR sr.Increase3By3");
 
+        if (ReflectionExtensions.HasDataAnnotation<RequiredAttribute>(typeof(UserEntity), "FirstName"))
+        {
+            modelBuilder.Entity<UserEntity>().Property(p => p.FirstName).IsRequired();
+        }
+
         modelBuilder.Entity<UserEntity>().Property(x => x.FirstName).HasMaxLength(50);
         modelBuilder.Entity<UserEntity>().Property(x => x.LastName).HasMaxLength(50);
         modelBuilder.Entity<UserEntity>().Property(x => x.Phone).HasMaxLength(20);
@@ -29,8 +35,9 @@ public class OnlineShopDBContext(DbContextOptions options) : DbContext(options)
             );
 
         modelBuilder.Entity<UserEntity>().Property<DateTime>("CreatedAt").IsRequired();
-        modelBuilder.Entity<UserEntity>().Property<DateTime?>("UpdateAt");
-        modelBuilder.Entity<UserEntity>().Property<bool>("IsDeleted").HasDefaultValue(false).HasAnnotation("SoftDelete", true);
+        modelBuilder.Entity<UserEntity>().Property<DateTime?>("UpdatedAt");
+        modelBuilder.Entity<UserEntity>().Property<DateTime?>("DeletedAt");
+        modelBuilder.Entity<UserEntity>().Property<bool>("IsDeleted").HasDefaultValue(false);
 
         modelBuilder.Entity<UserEntity>().HasQueryFilter(x => EF.Property<bool>(x, "IsDeleted") == false);
 
@@ -94,6 +101,8 @@ public class OnlineShopDBContext(DbContextOptions options) : DbContext(options)
             {
                 entry.State = EntityState.Modified;
                 entry.Property("IsDeleted").CurrentValue = true;
+                entry.Property("DeletedAt").CurrentValue = DateTime.Now;
+
             }
         }
     }

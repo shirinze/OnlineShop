@@ -1,8 +1,11 @@
-﻿namespace OnlineShop.Models;
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace OnlineShop.Models;
 
 public class UserEntity
 {
     public int UserEntityId { get; set; }
+    [Required]
     public string FirstName { get; set; } =string.Empty;
     public string LastName { get; set; } = string.Empty;
     public string Phone { get; set; }= string.Empty;    
