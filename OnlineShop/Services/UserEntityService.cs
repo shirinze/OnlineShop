@@ -41,21 +41,33 @@ public class UserEntityService(IUnitOfWork unitOfWork,IMemoryCache memoryCache) 
         return value;
     }
 
-    public async Task<List<UserEntity>> GetListAsync(string? q, OrderType? orderType, CancellationToken cancellationToken)
-    { 
-        var cacheKey = $"user_list_{q}";
+    public async Task<PaginationResult<UserEntity>> GetListAsync(string? q,
+        OrderType? orderType
+        ,int? pageSize
+        ,int? pageNumber
+        , CancellationToken cancellationToken
+        )
+    {
+       
 
-        var values = memoryCache.Get<List<UserEntity>>(cacheKey);
-        
-        if (values == null)
+        var cacheKey = $"user_list_{q}_{orderType}_{pageSize}_{pageNumber}";
+        var cachedResult = memoryCache.Get<PaginationResult<UserEntity>>(cacheKey);
+
+        if (cachedResult != null)
         {
-            var specification = new GetUserEntityByContainsNameSpecification(q, orderType);
-            values = await unitOfWork.UserEntityRepository.GetAllAsync(specification, cancellationToken);
-
-            memoryCache.Set(cacheKey, values, DateTime.Now.AddSeconds(30));
+            return cachedResult;
         }
 
-        return values;
+        var specification = new GetUserEntityByContainsNameSpecification(q, orderType, pageSize, pageNumber);
+        var (totalCount, entities) = await unitOfWork.UserEntityRepository.GetAllAsync(specification, cancellationToken);
+
+        var result = PaginationResult<UserEntity>.Create(pageSize??0, pageNumber??0, totalCount, entities);
+
+        memoryCache.Set(cacheKey, result, DateTime.Now.AddSeconds(30));
+
+        return result;
+
+
     }
 
     public async Task ToggleActivationAsync(int id, CancellationToken cancellationToken)

@@ -4,9 +4,13 @@ namespace OnlineShop.Features;
 
 public class BaseSpecification<TEntity>
 {
-    public Expression<Func<TEntity, bool>>? Criteria { get; set; }
-    public Expression<Func<TEntity, object>>? OrderByExpression { get; set; }
-    public Expression<Func<TEntity, object>>? OrderByDescendingExpression { get; set; }
+    public bool IsPaginationEnabled { get;private set; }
+    public int Skip { get;private set; }
+    public int Take { get;private set; }
+
+    public Expression<Func<TEntity, bool>>? Criteria { get;private set; }
+    public Expression<Func<TEntity, object>>? OrderByExpression { get;private set; }
+    public Expression<Func<TEntity, object>>? OrderByDescendingExpression { get;private set; }
 
     protected void AddCriteria(Expression<Func<TEntity, bool>> expression)
     {
@@ -38,6 +42,12 @@ public class BaseSpecification<TEntity>
         {
             OrderByDescendingExpression = expression;
         }
+    }
+    protected void AddPagination(int pageSize,int pageNumber)
+    {
+        Skip = (pageNumber - 1) * pageSize;
+        Take= pageSize;
+        IsPaginationEnabled = true;
     }
 
     private class ReplaceParameterVisitor(ParameterExpression oldParameter, ParameterExpression newParameter) : ExpressionVisitor

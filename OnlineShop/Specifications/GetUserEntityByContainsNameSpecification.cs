@@ -5,7 +5,7 @@ namespace OnlineShop.Specifications;
 
 public class GetUserEntityByContainsNameSpecification:BaseSpecification<UserEntity>
 {
-    public GetUserEntityByContainsNameSpecification(string? q, OrderType? orderType)
+    public GetUserEntityByContainsNameSpecification(string? q, OrderType? orderType,int? pageSize,int? pageNumber)
     {
         AddCriteria(x => x.IsActive);
 
@@ -17,6 +17,10 @@ public class GetUserEntityByContainsNameSpecification:BaseSpecification<UserEnti
         if (orderType != null)
         {
             AddOrderBy(x => x.UserEntityId, orderType.Value);
+        }
+        if(pageSize.HasValue && pageNumber.HasValue)
+        {
+            AddPagination(pageSize.Value, pageNumber.Value);
         }
     }
 }

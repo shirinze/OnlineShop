@@ -8,6 +8,6 @@ public interface IUserEntityRepository
     public void Update(UserEntity userEntity);
     public void Delete(UserEntity userEntity);
     public Task<UserEntity?> GetByIdAsync(int id,CancellationToken cancellationToken);
-    public Task<List<UserEntity>> GetAllAsync(BaseSpecification<UserEntity> specification, CancellationToken cancellationToken);
+    public Task<(int,List<UserEntity>)> GetAllAsync(BaseSpecification<UserEntity> specification, CancellationToken cancellationToken);
 }
 

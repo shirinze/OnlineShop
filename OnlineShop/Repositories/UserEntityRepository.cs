@@ -19,11 +19,17 @@ namespace OnlineShop.Repositories
             set.Remove(userEntity);
         }
 
-        public async Task<List<UserEntity>> GetAllAsync(BaseSpecification<UserEntity> specification, CancellationToken cancellationToken)
+        public async Task<(int,List<UserEntity>)> GetAllAsync(BaseSpecification<UserEntity> specification, CancellationToken cancellationToken)
         {
             var query = set.AsNoTracking().Specify(specification);
+            var totalCount =await query.CountAsync();
+            if (specification.IsPaginationEnabled)
+            {
+                query = query.Skip(specification.Skip).Take(specification.Take);
+            }
+            var result=await query.ToListAsync(cancellationToken);
 
-            return await query.ToListAsync(cancellationToken);
+            return (totalCount, result);
         }
 
         public async Task<UserEntity?> GetByIdAsync(int id, CancellationToken cancellationToken)
@@ -36,5 +42,7 @@ namespace OnlineShop.Repositories
         {
             set.Update(userEntity);
         }
+
+     
     }
 }
