@@ -1,3 +1,4 @@
+using Humanizer;
 using Microsoft.EntityFrameworkCore;
 using OnlineShop.Attributes;
 using OnlineShop.Data;
@@ -5,6 +6,7 @@ using OnlineShop.Features;
 using OnlineShop.Middlewares;
 using OnlineShop.Repositories;
 using OnlineShop.Services;
+using OnlineShop.ViewModels;
 using System.ComponentModel;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -26,6 +28,11 @@ builder.Services.AddScoped<IUserEntityRepository,UserEntityRepository>();
 builder.Services.AddScoped<ICityRepository,CityRepository>();
 
 builder.Services.AddScoped<IUserEntityService, UserEntityService>();
+
+builder.Services.AddMediatR(options =>
+{
+    options.RegisterServicesFromAssemblies(typeof(Program).Assembly);
+});
 
 builder.Services.AddMemoryCache();
 var app = builder.Build();
@@ -65,20 +72,21 @@ foreach (var enumType in enumTypes)
             {
                 var memberInfo = enumType.GetMember(e.ToString()!)[0];
 
-                var description = memberInfo
-                    .GetCustomAttribute<DescriptionAttribute>()?
-                    .Description ?? e.ToString();
+               
 
                 var infoAttributes = memberInfo
                     .GetCustomAttributes<InfoAttribute>()
                     .ToDictionary(a => a.Key, a => a.Value);
 
-                return new
+                //dynamic object
+                return new 
                 {
                     key = Convert.ToInt32(e),
                     value = e.ToString(),
-                    description,
-                    information = infoAttributes
+                    Description = e.Humanize(),
+                    information = infoAttributes,
+                    
+                   
                 };
             });
 
