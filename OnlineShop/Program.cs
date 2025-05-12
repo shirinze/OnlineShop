@@ -1,9 +1,14 @@
+using FluentValidation;
 using Humanizer;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
+using OnlineShop;
 using OnlineShop.Attributes;
+using OnlineShop.Behaviors;
 using OnlineShop.Data;
 using OnlineShop.Features;
 using OnlineShop.Middlewares;
+using OnlineShop.Proxies;
 using OnlineShop.Repositories;
 using OnlineShop.Services;
 using OnlineShop.ViewModels;
@@ -29,10 +34,16 @@ builder.Services.AddScoped<ICityRepository,CityRepository>();
 
 builder.Services.AddScoped<IUserEntityService, UserEntityService>();
 
+builder.Services.AddScoped<ITrackingCodeProxy, TrackingCodeProxy>();
+
 builder.Services.AddMediatR(options =>
 {
     options.RegisterServicesFromAssemblies(typeof(Program).Assembly);
+    options.AddBehavior(typeof(IPipelineBehavior<,>),typeof(ValidationBehavior<,>));
 });
+builder.Services.AddValidatorsFromAssembly(typeof(Program).Assembly);
+
+builder.Services.Configure<Settings>(builder.Configuration.GetSection("Settings"));
 
 builder.Services.AddMemoryCache();
 var app = builder.Build();

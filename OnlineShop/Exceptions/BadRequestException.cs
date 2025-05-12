@@ -1,3 +1,6 @@
 ﻿namespace OnlineShop.Exceptions;
 
-public class BadRequestException(string message):Exception(message);
+public class BadRequestException(string message, Dictionary<string, string[]> errors) : Exception(message)
+{
+   public Dictionary<string, string[]> Errors = errors;
+}

@@ -4,17 +4,19 @@ using OnlineShop.Exceptions;
 using OnlineShop.Features;
 using OnlineShop.Helpers;
 using OnlineShop.Models;
+using OnlineShop.Proxies;
 using OnlineShop.Specifications;
 using OnlineShop.ViewModels;
 
 
 namespace OnlineShop.Services;
 
-public class UserEntityService(IUnitOfWork unitOfWork,IMemoryCache memoryCache) : IUserEntityService
+public class UserEntityService(IUnitOfWork unitOfWork,IMemoryCache memoryCache,ITrackingCodeProxy trackingCodeProxy) : IUserEntityService
 {
-    public async Task CreateAsync(string firstName, string lastName, string phone, CancellationToken cancellationToken)
+    public async Task CreateAsync(string firstName, string lastName ,string phone, CancellationToken cancellationToken)
     {
-        var value = UserEntity.Create(firstName,lastName,phone);
+        var trackingCode =await trackingCodeProxy.Get(cancellationToken);
+        var value = UserEntity.Create(firstName,lastName,phone,trackingCode);
         await unitOfWork.UserEntityRepository.AddAsync(value, cancellationToken);
         await unitOfWork.CommitAsync(cancellationToken);
     }

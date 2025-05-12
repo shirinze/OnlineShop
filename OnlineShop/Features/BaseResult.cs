@@ -12,6 +12,7 @@ public class BaseResult
 {
     public bool IsSuccess { get; set; }
     public string Message { get;private set; } = string.Empty;
+    public Dictionary<string, string[]> ValiationErrors { get; private set; } = [];
 
     public static BaseResult Success(string message="Done")
     {
@@ -20,10 +21,11 @@ public class BaseResult
         return result;
 
     }
-    public static BaseResult Fail(string message)
+    public static BaseResult Fail(string message, Dictionary<string, string[]> validationErrors)
     {
         var result = new BaseResult();
-        result.Error(message);
+        result.Error(message,validationErrors);
+
         return result;
     }
     public static BaseResult<T> Success<T>(T value,string message="Done")
@@ -33,10 +35,11 @@ public class BaseResult
         result.Ok(message);
         return result;
     }
-    private void Error(string message)
+    private void Error(string message, Dictionary<string, string[]> validationErrors)
     {
         Message = message;
         IsSuccess = false;
+        ValiationErrors = validationErrors;
     }
     private void Ok(string message)
     {
